@@ -1,0 +1,11 @@
+# Assets Directory
+
+Place your application icons here:
+- icon.icns - macOS app icon (512x512 or higher, in .icns format)
+- icon.png - General icon (512x512 PNG)
+- tray-icon.png - System tray icon (22x22 or 44x44 PNG for retina)
+
+You can create these using tools like:
+- Image2Icon (macOS)
+- IconGenerator
+- Or convert from PNG using iconutil command
