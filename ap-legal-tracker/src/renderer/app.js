@@ -16,6 +16,7 @@ const elements = {
   pageTitle: document.getElementById('page-title'),
   searchInput: document.getElementById('search-input'),
   addCaseBtn: document.getElementById('add-case-btn'),
+  searchEcourtsBtn: document.getElementById('search-ecourts-btn'),
   refreshBtn: document.getElementById('refresh-btn'),
   caseModal: document.getElementById('case-modal'),
   caseForm: document.getElementById('case-form'),
@@ -23,7 +24,20 @@ const elements = {
   closeModal: document.getElementById('close-modal'),
   cancelCase: document.getElementById('cancel-case'),
   casesTableBody: document.getElementById('cases-table-body'),
-  loadingOverlay: document.getElementById('loading-overlay')
+  loadingOverlay: document.getElementById('loading-overlay'),
+  loadingText: document.getElementById('loading-text'),
+  // Search modal elements
+  searchModal: document.getElementById('search-modal'),
+  searchCaseForm: document.getElementById('search-case-form'),
+  searchCnrForm: document.getElementById('search-cnr-form'),
+  closeSearchModal: document.getElementById('close-search-modal'),
+  searchCourt: document.getElementById('search-court'),
+  searchDistrict: document.getElementById('search-district'),
+  searchCaseType: document.getElementById('search-case-type'),
+  searchCaseNumber: document.getElementById('search-case-number'),
+  searchCaseYear: document.getElementById('search-case-year'),
+  searchCnrNumber: document.getElementById('search-cnr-number'),
+  districtSelectGroup: document.getElementById('district-select-group')
 };
 
 // Initialize App
@@ -35,6 +49,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Set up event listeners
   setupEventListeners();
+
+  // Set up eCourts search
+  setupSearchModal();
 
   // Load initial data
   await loadDashboardData();
@@ -126,6 +143,11 @@ function setupEventListeners() {
   // Add Case Button
   elements.addCaseBtn.addEventListener('click', () => {
     openCaseModal();
+  });
+
+  // Search eCourts Button - Opens Mercury Lawyer style search
+  elements.searchEcourtsBtn?.addEventListener('click', () => {
+    openSearchModal();
   });
 
   // Refresh Button
@@ -854,3 +876,314 @@ window.viewCaseDetails = viewCaseDetails;
 window.editCase = editCase;
 window.deleteCase = deleteCase;
 window.fetchCaseStatus = fetchCaseStatus;
+
+// ============================================
+// SEARCH ECOURTS - Mercury Lawyer Style
+// ============================================
+
+function setupSearchModal() {
+  // Close search modal
+  elements.closeSearchModal?.addEventListener('click', closeSearchModal);
+  document.getElementById('cancel-search')?.addEventListener('click', closeSearchModal);
+  document.getElementById('cancel-cnr-search')?.addEventListener('click', closeSearchModal);
+
+  // Click outside modal to close
+  elements.searchModal?.addEventListener('click', (e) => {
+    if (e.target === elements.searchModal) {
+      closeSearchModal();
+    }
+  });
+
+  // Tab switching
+  document.querySelectorAll('.search-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      const tabName = tab.dataset.tab;
+      switchSearchTab(tabName);
+    });
+  });
+
+  // Court selection change - show/hide district dropdown
+  elements.searchCourt?.addEventListener('change', handleCourtChange);
+
+  // Search forms submission
+  elements.searchCaseForm?.addEventListener('submit', handleEcourtsSearch);
+  elements.searchCnrForm?.addEventListener('submit', handleCnrSearch);
+
+  // Populate year dropdown
+  populateYearDropdown();
+
+  // Populate districts
+  populateDistrictOptions();
+}
+
+function openSearchModal() {
+  elements.searchModal?.classList.add('active');
+  elements.searchCaseForm.reset();
+  elements.searchCnrForm.reset();
+
+  // Reset to first tab
+  switchSearchTab('case-number');
+
+  // Reset district visibility
+  elements.districtSelectGroup.style.display = 'none';
+}
+
+function closeSearchModal() {
+  elements.searchModal?.classList.remove('active');
+}
+
+function switchSearchTab(tabName) {
+  // Update tab styles
+  document.querySelectorAll('.search-tab').forEach(tab => {
+    tab.classList.toggle('active', tab.dataset.tab === tabName);
+  });
+
+  // Show/hide forms
+  if (tabName === 'case-number') {
+    elements.searchCaseForm.style.display = 'block';
+    elements.searchCnrForm.style.display = 'none';
+  } else {
+    elements.searchCaseForm.style.display = 'none';
+    elements.searchCnrForm.style.display = 'block';
+  }
+}
+
+function populateYearDropdown() {
+  const yearSelect = elements.searchCaseYear;
+  if (!yearSelect) return;
+
+  const currentYear = new Date().getFullYear();
+  yearSelect.innerHTML = '<option value="">Select Year</option>';
+
+  for (let year = currentYear; year >= 1990; year--) {
+    const option = document.createElement('option');
+    option.value = year;
+    option.textContent = year;
+    yearSelect.appendChild(option);
+  }
+}
+
+async function populateDistrictOptions() {
+  const districtSelect = elements.searchDistrict;
+  const districtGroup = document.getElementById('district-court-options');
+
+  if (!districtSelect || !window.api) return;
+
+  try {
+    const districts = await window.api.getAPDistricts();
+
+    // Populate district dropdown
+    districtSelect.innerHTML = '<option value="">Select District</option>';
+    districts.forEach(district => {
+      const option = document.createElement('option');
+      option.value = district;
+      option.textContent = district;
+      districtSelect.appendChild(option);
+    });
+
+    // Also populate district court options in main dropdown
+    if (districtGroup) {
+      districtGroup.innerHTML = '';
+      districts.forEach(district => {
+        const option = document.createElement('option');
+        option.value = `District Court ${district}`;
+        option.textContent = `District Court ${district}`;
+        districtGroup.appendChild(option);
+      });
+    }
+  } catch (error) {
+    console.error('Error loading districts:', error);
+  }
+}
+
+async function handleCourtChange() {
+  const court = elements.searchCourt?.value || '';
+  const caseTypeSelect = elements.searchCaseType;
+
+  // Show/hide district dropdown based on court type
+  const isDistrictCourt = court.includes('District Court');
+  elements.districtSelectGroup.style.display = isDistrictCourt ? 'block' : 'none';
+
+  if (isDistrictCourt) {
+    // Extract district from selection
+    const district = court.replace('District Court ', '');
+    if (elements.searchDistrict) {
+      elements.searchDistrict.value = district;
+    }
+  }
+
+  // Update case types based on court
+  if (window.api && caseTypeSelect) {
+    try {
+      let courtType = 'district';
+      if (court.includes('High Court')) {
+        courtType = 'high';
+      } else if (court.includes('Supreme Court')) {
+        courtType = 'supreme';
+      }
+
+      const caseTypes = await window.api.getCaseTypes(courtType);
+      caseTypeSelect.innerHTML = '<option value="">Select Case Type</option>';
+      caseTypes.forEach(ct => {
+        const option = document.createElement('option');
+        option.value = ct.code;
+        option.textContent = ct.name;
+        caseTypeSelect.appendChild(option);
+      });
+    } catch (error) {
+      console.error('Error loading case types:', error);
+    }
+  }
+}
+
+async function handleEcourtsSearch(e) {
+  e.preventDefault();
+
+  const court = elements.searchCourt?.value;
+  const caseType = elements.searchCaseType?.value;
+  const caseNumber = elements.searchCaseNumber?.value;
+  const caseYear = elements.searchCaseYear?.value;
+  const district = elements.searchDistrict?.value;
+
+  if (!court || !caseType || !caseNumber || !caseYear) {
+    showError('Please fill all required fields');
+    return;
+  }
+
+  // Show loading
+  showLoadingWithMessage('Opening eCourts portal... Please solve the CAPTCHA when it appears.');
+
+  try {
+    closeSearchModal();
+
+    const searchParams = {
+      court,
+      caseType,
+      caseNumber,
+      caseYear,
+      district: court.includes('District') ? district : null
+    };
+
+    console.log('Searching eCourts:', searchParams);
+
+    const result = await window.api.searchEcourts(searchParams);
+
+    hideLoading();
+
+    if (result.success && result.data) {
+      // Ask user to confirm adding the case
+      const caseData = result.data;
+      const confirmAdd = confirm(
+        `Case Found!\n\n` +
+        `Case: ${caseData.case_number || caseNumber}\n` +
+        `Petitioner: ${caseData.petitioner || 'N/A'}\n` +
+        `Respondent: ${caseData.respondent || 'N/A'}\n` +
+        `Status: ${caseData.case_status || 'Pending'}\n` +
+        `Next Hearing: ${caseData.next_hearing_date || 'N/A'}\n\n` +
+        `Add this case to your tracker?`
+      );
+
+      if (confirmAdd) {
+        // Add the case
+        const newCase = await window.api.addCase({
+          ...caseData,
+          case_type: caseType,
+          case_year: parseInt(caseYear),
+          priority: 'normal'
+        });
+
+        showSuccess(`Case ${caseData.case_number || caseNumber} added successfully!`);
+        await loadViewData(state.currentView);
+      }
+    } else {
+      showError(result.error || 'Case not found. Please check the details and try again.');
+    }
+
+    // Close browser
+    await window.api.closeBrowser();
+
+  } catch (error) {
+    hideLoading();
+    console.error('eCourts search error:', error);
+    showError('Search failed: ' + error.message);
+
+    // Close browser on error
+    try {
+      await window.api.closeBrowser();
+    } catch (e) {}
+  }
+}
+
+async function handleCnrSearch(e) {
+  e.preventDefault();
+
+  const cnrNumber = elements.searchCnrNumber?.value?.trim();
+
+  if (!cnrNumber) {
+    showError('Please enter a CNR number');
+    return;
+  }
+
+  showLoadingWithMessage('Searching by CNR... Please solve the CAPTCHA when it appears.');
+
+  try {
+    closeSearchModal();
+
+    const result = await window.api.searchByCNR(cnrNumber);
+
+    hideLoading();
+
+    if (result.success && result.data) {
+      const caseData = result.data;
+      const confirmAdd = confirm(
+        `Case Found!\n\n` +
+        `CNR: ${cnrNumber}\n` +
+        `Case: ${caseData.case_number || 'N/A'}\n` +
+        `Petitioner: ${caseData.petitioner || 'N/A'}\n` +
+        `Respondent: ${caseData.respondent || 'N/A'}\n` +
+        `Status: ${caseData.case_status || 'Pending'}\n\n` +
+        `Add this case to your tracker?`
+      );
+
+      if (confirmAdd) {
+        const newCase = await window.api.addCase({
+          ...caseData,
+          cnr_number: cnrNumber,
+          priority: 'normal'
+        });
+
+        showSuccess(`Case added successfully!`);
+        await loadViewData(state.currentView);
+      }
+    } else {
+      showError(result.error || 'Case not found. Please check the CNR number.');
+    }
+
+    await window.api.closeBrowser();
+
+  } catch (error) {
+    hideLoading();
+    console.error('CNR search error:', error);
+    showError('Search failed: ' + error.message);
+
+    try {
+      await window.api.closeBrowser();
+    } catch (e) {}
+  }
+}
+
+function showLoadingWithMessage(message) {
+  if (elements.loadingText) {
+    elements.loadingText.textContent = message;
+  }
+  showLoading();
+}
+
+// Override hideLoading to reset message
+const originalHideLoading = hideLoading;
+function hideLoading() {
+  elements.loadingOverlay.classList.add('hidden');
+  if (elements.loadingText) {
+    elements.loadingText.textContent = 'Loading...';
+  }
+}

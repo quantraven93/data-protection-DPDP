@@ -183,6 +183,29 @@ function setupIpcHandlers() {
     return await ecourtsService.fetchCaseOrders(caseData);
   });
 
+  // eCourts Search - Auto fetch like Mercury Lawyer
+  ipcMain.handle('search-ecourts', async (event, searchParams) => {
+    log.info('Searching eCourts:', searchParams);
+    return await ecourtsService.searchCase(searchParams);
+  });
+
+  ipcMain.handle('search-by-cnr', async (event, cnrNumber) => {
+    log.info('Searching by CNR:', cnrNumber);
+    return await ecourtsService.searchByCNR(cnrNumber);
+  });
+
+  ipcMain.handle('get-case-types', (event, courtType) => {
+    return ecourtsService.getCaseTypes(courtType);
+  });
+
+  ipcMain.handle('get-ap-districts', () => {
+    return ecourtsService.getDistricts();
+  });
+
+  ipcMain.handle('close-browser', async () => {
+    await ecourtsService.closeBrowser();
+  });
+
   // Hearings
   ipcMain.handle('get-upcoming-hearings', () => db.getUpcomingHearings());
   ipcMain.handle('add-hearing', (event, hearingData) => db.addHearing(hearingData));

@@ -14,6 +14,13 @@ contextBridge.exposeInMainWorld('api', {
   fetchCaseStatus: (caseData) => ipcRenderer.invoke('fetch-case-status', caseData),
   fetchCaseOrders: (caseData) => ipcRenderer.invoke('fetch-case-orders', caseData),
 
+  // eCourts Search - Auto fetch like Mercury Lawyer
+  searchEcourts: (searchParams) => ipcRenderer.invoke('search-ecourts', searchParams),
+  searchByCNR: (cnrNumber) => ipcRenderer.invoke('search-by-cnr', cnrNumber),
+  getCaseTypes: (courtType) => ipcRenderer.invoke('get-case-types', courtType),
+  getAPDistricts: () => ipcRenderer.invoke('get-ap-districts'),
+  closeBrowser: () => ipcRenderer.invoke('close-browser'),
+
   // Hearings
   getUpcomingHearings: () => ipcRenderer.invoke('get-upcoming-hearings'),
   addHearing: (hearingData) => ipcRenderer.invoke('add-hearing', hearingData),

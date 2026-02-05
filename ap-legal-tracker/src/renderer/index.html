@@ -72,8 +72,11 @@
           <div class="search-box">
             <input type="text" id="search-input" placeholder="Search cases...">
           </div>
-          <button class="btn btn-primary" id="add-case-btn">
-            + Add Case
+          <button class="btn btn-primary" id="search-ecourts-btn" title="Search & Import from eCourts">
+            🔍 Search eCourts
+          </button>
+          <button class="btn btn-secondary" id="add-case-btn">
+            + Manual Add
           </button>
           <button class="btn btn-secondary" id="refresh-btn" title="Refresh all cases">
             🔄
@@ -435,10 +438,100 @@
     </div>
   </div>
 
+  <!-- Search eCourts Modal - Like Mercury Lawyer -->
+  <div id="search-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Search & Add Case from eCourts</h2>
+        <button class="modal-close" id="close-search-modal">&times;</button>
+      </div>
+      <div class="search-tabs">
+        <button class="search-tab active" data-tab="case-number">By Case Number</button>
+        <button class="search-tab" data-tab="cnr">By CNR Number</button>
+      </div>
+
+      <!-- Search by Case Number -->
+      <form id="search-case-form" class="search-form">
+        <div class="form-grid">
+          <div class="form-group full-width">
+            <label for="search-court">Hearing Court *</label>
+            <select id="search-court" required>
+              <option value="">Select Court</option>
+              <option value="High Court of Andhra Pradesh">High Court of Andhra Pradesh</option>
+              <option value="Supreme Court of India">Supreme Court of India</option>
+              <optgroup label="District Courts" id="district-court-options">
+                <!-- Districts will be loaded dynamically -->
+              </optgroup>
+            </select>
+          </div>
+
+          <div class="form-group" id="district-select-group" style="display: none;">
+            <label for="search-district">District *</label>
+            <select id="search-district">
+              <option value="">Select District</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="search-case-type">Case Type *</label>
+            <select id="search-case-type" required>
+              <option value="">Select Case Type</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="search-case-number">Case Number *</label>
+            <input type="text" id="search-case-number" placeholder="Enter Case Number" required>
+          </div>
+
+          <div class="form-group">
+            <label for="search-case-year">Case Year *</label>
+            <select id="search-case-year" required>
+              <!-- Years will be populated dynamically -->
+            </select>
+          </div>
+        </div>
+
+        <div class="search-info">
+          <p>A browser window will open for you to solve the CAPTCHA. Once you click "Search/Go", the case details will be automatically imported.</p>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" id="cancel-search">Cancel</button>
+          <button type="submit" class="btn btn-primary">
+            🔍 Search eCourts
+          </button>
+        </div>
+      </form>
+
+      <!-- Search by CNR -->
+      <form id="search-cnr-form" class="search-form" style="display: none;">
+        <div class="form-grid">
+          <div class="form-group full-width">
+            <label for="search-cnr-number">CNR Number *</label>
+            <input type="text" id="search-cnr-number" placeholder="e.g., APHC01-001234-2024" required>
+            <small class="form-help">CNR is a unique 16-digit Case Number Record identifier</small>
+          </div>
+        </div>
+
+        <div class="search-info">
+          <p>A browser window will open for you to solve the CAPTCHA. Once you click "Search", the case details will be automatically imported.</p>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" id="cancel-cnr-search">Cancel</button>
+          <button type="submit" class="btn btn-primary">
+            🔍 Search by CNR
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- Loading Overlay -->
   <div id="loading-overlay" class="loading-overlay hidden">
     <div class="spinner"></div>
-    <p>Loading...</p>
+    <p id="loading-text">Loading...</p>
   </div>
 
   <script src="app.js"></script>
