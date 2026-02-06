@@ -4,28 +4,21 @@
   "description": "Legal Case Tracker for Andhra Pradesh Courts - High Court, District Courts & Supreme Court",
   "main": "src/main/main.js",
   "scripts": {
-    "start": "electron .",
-    "dev": "NODE_ENV=development electron .",
+    "start": "npx electron .",
+    "dev": "NODE_ENV=development npx electron .",
     "build": "electron-builder --mac",
-    "build:all": "electron-builder --mac --win --linux",
-    "postinstall": "electron-builder install-app-deps"
+    "build:all": "electron-builder --mac --win --linux"
   },
   "author": "AP Legal Tracker",
   "license": "MIT",
   "dependencies": {
-    "better-sqlite3": "^11.0.0",
-    "axios": "^1.6.0",
-    "cheerio": "^1.0.0-rc.12",
     "electron-store": "^8.1.0",
     "node-schedule": "^2.1.1",
     "electron-log": "^5.1.0"
   },
   "devDependencies": {
     "electron": "^29.0.0",
-    "electron-builder": "^24.9.0",
-    "tailwindcss": "^3.4.0",
-    "postcss": "^8.4.0",
-    "autoprefixer": "^10.4.0"
+    "electron-builder": "^24.9.0"
   },
   "build": {
     "appId": "com.aplegaltracker.app",

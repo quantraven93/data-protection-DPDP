@@ -1,448 +1,256 @@
-const Database = require('better-sqlite3');
-const path = require('path');
+const Store = require('electron-store');
 const log = require('electron-log');
 
+/**
+ * Database using electron-store (JSON-based storage)
+ * No native compilation required - works on all platforms
+ */
 class CaseDatabase {
   constructor(userDataPath) {
-    this.dbPath = path.join(userDataPath, 'ap-legal-tracker.db');
-    this.db = null;
+    this.store = new Store({
+      name: 'ap-legal-tracker-data',
+      defaults: {
+        cases: [],
+        nextCaseId: 1,
+        courts: [],
+        districts: []
+      }
+    });
   }
 
   async initialize() {
-    log.info('Initializing database at:', this.dbPath);
+    log.info('Initializing JSON database...');
 
-    this.db = new Database(this.dbPath);
-    this.db.pragma('journal_mode = WAL');
-
-    // Create tables
-    this.createTables();
-    this.seedCourtsAndDistricts();
+    // Seed courts and districts if empty
+    if (this.store.get('courts', []).length === 0) {
+      this.seedCourtsAndDistricts();
+    }
 
     log.info('Database initialized successfully');
   }
 
-  createTables() {
-    // Courts table
-    this.db.exec(`
-      CREATE TABLE IF NOT EXISTS courts (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        code TEXT UNIQUE NOT NULL,
-        type TEXT NOT NULL, -- 'supreme', 'high', 'district', 'tribunal'
-        state_code TEXT,
-        district_code TEXT,
-        base_url TEXT,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
-
-    // Districts table
-    this.db.exec(`
-      CREATE TABLE IF NOT EXISTS districts (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        code TEXT UNIQUE NOT NULL,
-        state_code TEXT NOT NULL,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
-
-    // Cases table
-    this.db.exec(`
-      CREATE TABLE IF NOT EXISTS cases (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        cnr_number TEXT UNIQUE,
-        case_number TEXT NOT NULL,
-        case_type TEXT,
-        case_year INTEGER,
-        court_id INTEGER,
-        court_name TEXT,
-        district TEXT,
-        petitioner TEXT,
-        respondent TEXT,
-        advocate_petitioner TEXT,
-        advocate_respondent TEXT,
-        filing_date TEXT,
-        registration_date TEXT,
-        first_hearing_date TEXT,
-        next_hearing_date TEXT,
-        case_stage TEXT,
-        case_status TEXT, -- 'pending', 'disposed', 'transferred'
-        disposal_date TEXT,
-        disposal_nature TEXT,
-        judge_name TEXT,
-        act_sections TEXT,
-        case_category TEXT,
-        priority TEXT DEFAULT 'normal', -- 'high', 'normal', 'low'
-        notes TEXT,
-        tags TEXT, -- JSON array of tags
-        last_updated DATETIME,
-        last_fetched DATETIME,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (court_id) REFERENCES courts (id)
-      )
-    `);
-
-    // Case history/proceedings table
-    this.db.exec(`
-      CREATE TABLE IF NOT EXISTS proceedings (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        case_id INTEGER NOT NULL,
-        hearing_date TEXT,
-        purpose TEXT,
-        judge_name TEXT,
-        business_date TEXT,
-        next_date TEXT,
-        next_purpose TEXT,
-        order_remarks TEXT,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (case_id) REFERENCES cases (id) ON DELETE CASCADE
-      )
-    `);
-
-    // Orders/Judgments table
-    this.db.exec(`
-      CREATE TABLE IF NOT EXISTS orders (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        case_id INTEGER NOT NULL,
-        order_date TEXT NOT NULL,
-        order_type TEXT, -- 'interim', 'final', 'judgment'
-        order_number TEXT,
-        judge_name TEXT,
-        order_text TEXT,
-        order_url TEXT,
-        is_read INTEGER DEFAULT 0,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (case_id) REFERENCES cases (id) ON DELETE CASCADE
-      )
-    `);
-
-    // Hearings/Calendar table
-    this.db.exec(`
-      CREATE TABLE IF NOT EXISTS hearings (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        case_id INTEGER NOT NULL,
-        hearing_date TEXT NOT NULL,
-        hearing_time TEXT,
-        purpose TEXT,
-        court_room TEXT,
-        judge_name TEXT,
-        reminder_sent INTEGER DEFAULT 0,
-        notes TEXT,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (case_id) REFERENCES cases (id) ON DELETE CASCADE
-      )
-    `);
-
-    // Documents table
-    this.db.exec(`
-      CREATE TABLE IF NOT EXISTS documents (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        case_id INTEGER NOT NULL,
-        document_type TEXT,
-        document_name TEXT,
-        file_path TEXT,
-        url TEXT,
-        upload_date DATETIME DEFAULT CURRENT_TIMESTAMP,
-        notes TEXT,
-        FOREIGN KEY (case_id) REFERENCES cases (id) ON DELETE CASCADE
-      )
-    `);
-
-    // Create indexes
-    this.db.exec(`
-      CREATE INDEX IF NOT EXISTS idx_cases_cnr ON cases(cnr_number);
-      CREATE INDEX IF NOT EXISTS idx_cases_case_number ON cases(case_number);
-      CREATE INDEX IF NOT EXISTS idx_cases_court ON cases(court_id);
-      CREATE INDEX IF NOT EXISTS idx_cases_status ON cases(case_status);
-      CREATE INDEX IF NOT EXISTS idx_cases_next_hearing ON cases(next_hearing_date);
-      CREATE INDEX IF NOT EXISTS idx_hearings_date ON hearings(hearing_date);
-      CREATE INDEX IF NOT EXISTS idx_orders_date ON orders(order_date);
-      CREATE INDEX IF NOT EXISTS idx_proceedings_case ON proceedings(case_id);
-    `);
-
-    log.info('Database tables created');
-  }
-
   seedCourtsAndDistricts() {
-    // Check if already seeded
-    const courtCount = this.db.prepare('SELECT COUNT(*) as count FROM courts').get();
-    if (courtCount.count > 0) return;
-
-    // Seed courts
-    const insertCourt = this.db.prepare(`
-      INSERT INTO courts (name, code, type, state_code, district_code, base_url)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `);
-
     const courts = [
-      ['Supreme Court of India', 'SCI', 'supreme', null, null, 'https://www.sci.gov.in'],
-      ['High Court of Andhra Pradesh', 'HCAP', 'high', '2', '1', 'https://hcservices.ecourts.gov.in/ecourtindiaHC/index_highcourt.php?state_cd=2&dist_cd=1'],
-      ['District Court Vijayawada', 'DC-VJA', 'district', '2', '13', 'https://services.ecourts.gov.in'],
-      ['District Court Guntur', 'DC-GNT', 'district', '2', '7', 'https://services.ecourts.gov.in'],
-      ['District Court Visakhapatnam', 'DC-VSP', 'district', '2', '24', 'https://services.ecourts.gov.in'],
-      ['District Court Tirupati', 'DC-TPT', 'district', '2', '6', 'https://services.ecourts.gov.in'],
-      ['District Court Nellore', 'DC-NLR', 'district', '2', '20', 'https://services.ecourts.gov.in'],
-      ['District Court Kurnool', 'DC-KNL', 'district', '2', '10', 'https://services.ecourts.gov.in'],
-      ['District Court Anantapur', 'DC-ATP', 'district', '2', '1', 'https://services.ecourts.gov.in'],
-      ['District Court Kadapa', 'DC-KDP', 'district', '2', '25', 'https://services.ecourts.gov.in'],
-      ['District Court Rajahmundry', 'DC-RJY', 'district', '2', '5', 'https://services.ecourts.gov.in'],
-      ['District Court Kakinada', 'DC-KKD', 'district', '2', '5', 'https://services.ecourts.gov.in'],
-      ['District Court Eluru', 'DC-ELR', 'district', '2', '26', 'https://services.ecourts.gov.in'],
-      ['District Court Ongole', 'DC-OGL', 'district', '2', '18', 'https://services.ecourts.gov.in'],
-      ['District Court Srikakulam', 'DC-SKM', 'district', '2', '21', 'https://services.ecourts.gov.in'],
-      ['District Court Vizianagaram', 'DC-VZM', 'district', '2', '23', 'https://services.ecourts.gov.in']
+      { id: 1, name: 'Supreme Court of India', code: 'SCI', type: 'supreme' },
+      { id: 2, name: 'High Court of Andhra Pradesh', code: 'HCAP', type: 'high' },
+      { id: 3, name: 'District Court Vijayawada', code: 'DC-VJA', type: 'district' },
+      { id: 4, name: 'District Court Guntur', code: 'DC-GNT', type: 'district' },
+      { id: 5, name: 'District Court Visakhapatnam', code: 'DC-VSP', type: 'district' },
+      { id: 6, name: 'District Court Tirupati', code: 'DC-TPT', type: 'district' },
+      { id: 7, name: 'District Court Nellore', code: 'DC-NLR', type: 'district' },
+      { id: 8, name: 'District Court Kurnool', code: 'DC-KNL', type: 'district' },
+      { id: 9, name: 'District Court Anantapur', code: 'DC-ATP', type: 'district' },
+      { id: 10, name: 'District Court Kadapa', code: 'DC-KDP', type: 'district' },
+      { id: 11, name: 'District Court Rajahmundry', code: 'DC-RJY', type: 'district' },
+      { id: 12, name: 'District Court Kakinada', code: 'DC-KKD', type: 'district' },
+      { id: 13, name: 'District Court Eluru', code: 'DC-ELR', type: 'district' },
+      { id: 14, name: 'District Court Ongole', code: 'DC-OGL', type: 'district' },
+      { id: 15, name: 'District Court Srikakulam', code: 'DC-SKM', type: 'district' }
     ];
-
-    const insertMany = this.db.transaction((courts) => {
-      for (const court of courts) {
-        insertCourt.run(...court);
-      }
-    });
-    insertMany(courts);
-
-    // Seed districts
-    const insertDistrict = this.db.prepare(`
-      INSERT INTO districts (name, code, state_code)
-      VALUES (?, ?, ?)
-    `);
 
     const districts = [
-      ['Anantapur', 'ATP', '2'],
-      ['Chittoor', 'CTR', '2'],
-      ['East Godavari', 'EG', '2'],
-      ['Guntur', 'GNT', '2'],
-      ['Krishna', 'KRS', '2'],
-      ['Kurnool', 'KNL', '2'],
-      ['Nellore', 'NLR', '2'],
-      ['Prakasam', 'PKM', '2'],
-      ['Srikakulam', 'SKM', '2'],
-      ['Visakhapatnam', 'VSP', '2'],
-      ['Vizianagaram', 'VZM', '2'],
-      ['West Godavari', 'WG', '2'],
-      ['YSR Kadapa', 'KDP', '2'],
-      ['Palnadu', 'PLN', '2'],
-      ['Bapatla', 'BPT', '2'],
-      ['Eluru', 'ELR', '2'],
-      ['NTR', 'NTR', '2'],
-      ['Kakinada', 'KKD', '2'],
-      ['Konaseema', 'KNS', '2'],
-      ['Anakapalli', 'AKP', '2'],
-      ['Alluri Sitharama Raju', 'ASR', '2'],
-      ['Parvathipuram Manyam', 'PVM', '2'],
-      ['Sri Sathya Sai', 'SSS', '2'],
-      ['Annamayya', 'AMY', '2'],
-      ['Tirupati', 'TPT', '2'],
-      ['Nandyal', 'NDL', '2']
+      { id: 1, name: 'Anantapur', code: 'ATP', state_code: '2' },
+      { id: 2, name: 'Chittoor', code: 'CTR', state_code: '2' },
+      { id: 3, name: 'East Godavari', code: 'EG', state_code: '2' },
+      { id: 4, name: 'Guntur', code: 'GNT', state_code: '2' },
+      { id: 5, name: 'Krishna', code: 'KRS', state_code: '2' },
+      { id: 6, name: 'Kurnool', code: 'KNL', state_code: '2' },
+      { id: 7, name: 'Nellore', code: 'NLR', state_code: '2' },
+      { id: 8, name: 'Prakasam', code: 'PKM', state_code: '2' },
+      { id: 9, name: 'Srikakulam', code: 'SKM', state_code: '2' },
+      { id: 10, name: 'Visakhapatnam', code: 'VSP', state_code: '2' },
+      { id: 11, name: 'Vizianagaram', code: 'VZM', state_code: '2' },
+      { id: 12, name: 'West Godavari', code: 'WG', state_code: '2' },
+      { id: 13, name: 'YSR Kadapa', code: 'KDP', state_code: '2' },
+      { id: 14, name: 'Vijayawada', code: 'VJA', state_code: '2' },
+      { id: 15, name: 'Tirupati', code: 'TPT', state_code: '2' },
+      { id: 16, name: 'Rajahmundry', code: 'RJY', state_code: '2' },
+      { id: 17, name: 'Kakinada', code: 'KKD', state_code: '2' },
+      { id: 18, name: 'Eluru', code: 'ELR', state_code: '2' },
+      { id: 19, name: 'Ongole', code: 'OGL', state_code: '2' }
     ];
 
-    const insertDistrictsMany = this.db.transaction((districts) => {
-      for (const district of districts) {
-        insertDistrict.run(...district);
-      }
-    });
-    insertDistrictsMany(districts);
-
+    this.store.set('courts', courts);
+    this.store.set('districts', districts);
     log.info('Seeded courts and districts');
   }
 
   // Case CRUD operations
   getAllCases() {
-    return this.db.prepare(`
-      SELECT c.*, co.name as court_full_name
-      FROM cases c
-      LEFT JOIN courts co ON c.court_id = co.id
-      ORDER BY c.next_hearing_date ASC, c.created_at DESC
-    `).all();
+    const cases = this.store.get('cases', []);
+    // Sort by next hearing date, then by created date
+    return cases.sort((a, b) => {
+      if (a.next_hearing_date && b.next_hearing_date) {
+        return new Date(a.next_hearing_date) - new Date(b.next_hearing_date);
+      }
+      if (a.next_hearing_date) return -1;
+      if (b.next_hearing_date) return 1;
+      return new Date(b.created_at) - new Date(a.created_at);
+    });
   }
 
   getCase(id) {
-    return this.db.prepare(`
-      SELECT c.*, co.name as court_full_name
-      FROM cases c
-      LEFT JOIN courts co ON c.court_id = co.id
-      WHERE c.id = ?
-    `).get(id);
+    const cases = this.store.get('cases', []);
+    return cases.find(c => c.id === id);
   }
 
   addCase(caseData) {
-    const stmt = this.db.prepare(`
-      INSERT INTO cases (
-        cnr_number, case_number, case_type, case_year, court_id, court_name,
-        district, petitioner, respondent, advocate_petitioner, advocate_respondent,
-        filing_date, registration_date, first_hearing_date, next_hearing_date,
-        case_stage, case_status, judge_name, act_sections, case_category,
-        priority, notes, tags, last_updated
-      ) VALUES (
-        @cnr_number, @case_number, @case_type, @case_year, @court_id, @court_name,
-        @district, @petitioner, @respondent, @advocate_petitioner, @advocate_respondent,
-        @filing_date, @registration_date, @first_hearing_date, @next_hearing_date,
-        @case_stage, @case_status, @judge_name, @act_sections, @case_category,
-        @priority, @notes, @tags, datetime('now')
-      )
-    `);
+    const cases = this.store.get('cases', []);
+    const nextId = this.store.get('nextCaseId', 1);
 
-    const result = stmt.run(caseData);
-    return { id: result.lastInsertRowid, ...caseData };
+    const newCase = {
+      id: nextId,
+      ...caseData,
+      created_at: new Date().toISOString(),
+      last_updated: new Date().toISOString()
+    };
+
+    cases.push(newCase);
+    this.store.set('cases', cases);
+    this.store.set('nextCaseId', nextId + 1);
+
+    log.info('Added new case:', newCase.id, newCase.case_number);
+    return newCase;
   }
 
   updateCase(id, caseData) {
-    const stmt = this.db.prepare(`
-      UPDATE cases SET
-        cnr_number = @cnr_number,
-        case_number = @case_number,
-        case_type = @case_type,
-        case_year = @case_year,
-        court_id = @court_id,
-        court_name = @court_name,
-        district = @district,
-        petitioner = @petitioner,
-        respondent = @respondent,
-        advocate_petitioner = @advocate_petitioner,
-        advocate_respondent = @advocate_respondent,
-        filing_date = @filing_date,
-        registration_date = @registration_date,
-        first_hearing_date = @first_hearing_date,
-        next_hearing_date = @next_hearing_date,
-        case_stage = @case_stage,
-        case_status = @case_status,
-        disposal_date = @disposal_date,
-        disposal_nature = @disposal_nature,
-        judge_name = @judge_name,
-        act_sections = @act_sections,
-        case_category = @case_category,
-        priority = @priority,
-        notes = @notes,
-        tags = @tags,
-        last_updated = datetime('now')
-      WHERE id = @id
-    `);
+    const cases = this.store.get('cases', []);
+    const index = cases.findIndex(c => c.id === id);
 
-    stmt.run({ id, ...caseData });
-    return this.getCase(id);
+    if (index === -1) {
+      throw new Error('Case not found');
+    }
+
+    cases[index] = {
+      ...cases[index],
+      ...caseData,
+      last_updated: new Date().toISOString()
+    };
+
+    this.store.set('cases', cases);
+    log.info('Updated case:', id);
+    return cases[index];
   }
 
   deleteCase(id) {
-    return this.db.prepare('DELETE FROM cases WHERE id = ?').run(id);
+    const cases = this.store.get('cases', []);
+    const filtered = cases.filter(c => c.id !== id);
+    this.store.set('cases', filtered);
+    log.info('Deleted case:', id);
+    return { changes: cases.length - filtered.length };
   }
 
   searchCases(query) {
-    const searchTerm = `%${query}%`;
-    return this.db.prepare(`
-      SELECT c.*, co.name as court_full_name
-      FROM cases c
-      LEFT JOIN courts co ON c.court_id = co.id
-      WHERE c.case_number LIKE ?
-        OR c.cnr_number LIKE ?
-        OR c.petitioner LIKE ?
-        OR c.respondent LIKE ?
-        OR c.advocate_petitioner LIKE ?
-        OR c.notes LIKE ?
-      ORDER BY c.next_hearing_date ASC
-    `).all(searchTerm, searchTerm, searchTerm, searchTerm, searchTerm, searchTerm);
+    const cases = this.store.get('cases', []);
+    const searchTerm = query.toLowerCase();
+
+    return cases.filter(c => {
+      return (
+        (c.case_number && c.case_number.toLowerCase().includes(searchTerm)) ||
+        (c.cnr_number && c.cnr_number.toLowerCase().includes(searchTerm)) ||
+        (c.petitioner && c.petitioner.toLowerCase().includes(searchTerm)) ||
+        (c.respondent && c.respondent.toLowerCase().includes(searchTerm)) ||
+        (c.advocate_petitioner && c.advocate_petitioner.toLowerCase().includes(searchTerm)) ||
+        (c.notes && c.notes.toLowerCase().includes(searchTerm))
+      );
+    });
   }
 
-  // Proceedings
-  addProceeding(proceedingData) {
-    const stmt = this.db.prepare(`
-      INSERT INTO proceedings (
-        case_id, hearing_date, purpose, judge_name, business_date,
-        next_date, next_purpose, order_remarks
-      ) VALUES (
-        @case_id, @hearing_date, @purpose, @judge_name, @business_date,
-        @next_date, @next_purpose, @order_remarks
-      )
-    `);
-    return stmt.run(proceedingData);
-  }
-
-  getCaseProceedings(caseId) {
-    return this.db.prepare(`
-      SELECT * FROM proceedings
-      WHERE case_id = ?
-      ORDER BY hearing_date DESC
-    `).all(caseId);
-  }
-
-  // Hearings
+  // Hearings - derived from cases with next_hearing_date
   getUpcomingHearings(days = 30) {
-    return this.db.prepare(`
-      SELECT h.*, c.case_number, c.petitioner, c.respondent, c.court_name
-      FROM hearings h
-      JOIN cases c ON h.case_id = c.id
-      WHERE h.hearing_date >= date('now')
-        AND h.hearing_date <= date('now', '+' || ? || ' days')
-      ORDER BY h.hearing_date ASC
-    `).all(days);
+    const cases = this.store.get('cases', []);
+    const now = new Date();
+    const futureDate = new Date();
+    futureDate.setDate(futureDate.getDate() + days);
+
+    return cases
+      .filter(c => {
+        if (!c.next_hearing_date) return false;
+        const hearingDate = new Date(c.next_hearing_date);
+        return hearingDate >= now && hearingDate <= futureDate;
+      })
+      .map(c => ({
+        case_id: c.id,
+        case_number: c.case_number,
+        petitioner: c.petitioner,
+        respondent: c.respondent,
+        court_name: c.court_name,
+        hearing_date: c.next_hearing_date,
+        purpose: c.case_stage || 'Hearing'
+      }))
+      .sort((a, b) => new Date(a.hearing_date) - new Date(b.hearing_date));
   }
 
   addHearing(hearingData) {
-    const stmt = this.db.prepare(`
-      INSERT INTO hearings (
-        case_id, hearing_date, hearing_time, purpose, court_room, judge_name, notes
-      ) VALUES (
-        @case_id, @hearing_date, @hearing_time, @purpose, @court_room, @judge_name, @notes
-      )
-    `);
-    return stmt.run(hearingData);
+    // Update the case's next hearing date
+    if (hearingData.case_id && hearingData.hearing_date) {
+      const caseData = this.getCase(hearingData.case_id);
+      if (caseData) {
+        this.updateCase(hearingData.case_id, {
+          next_hearing_date: hearingData.hearing_date
+        });
+      }
+    }
+    return hearingData;
   }
 
-  // Orders
+  // Orders - stored within cases
   getRecentOrders(days = 30) {
-    return this.db.prepare(`
-      SELECT o.*, c.case_number, c.petitioner, c.respondent, c.court_name
-      FROM orders o
-      JOIN cases c ON o.case_id = c.id
-      WHERE o.order_date >= date('now', '-' || ? || ' days')
-      ORDER BY o.order_date DESC
-    `).all(days);
+    // In this simplified version, we don't track separate orders
+    // Return empty array - orders can be added as a feature later
+    return [];
   }
 
   addOrder(orderData) {
-    const stmt = this.db.prepare(`
-      INSERT INTO orders (
-        case_id, order_date, order_type, order_number, judge_name, order_text, order_url
-      ) VALUES (
-        @case_id, @order_date, @order_type, @order_number, @judge_name, @order_text, @order_url
-      )
-    `);
-    return stmt.run(orderData);
+    // In this simplified version, just log it
+    log.info('Order noted for case:', orderData.case_id);
+    return orderData;
   }
 
   // Courts and Districts
   getCourts() {
-    return this.db.prepare('SELECT * FROM courts ORDER BY type, name').all();
+    return this.store.get('courts', []);
   }
 
   getDistricts() {
-    return this.db.prepare('SELECT * FROM districts ORDER BY name').all();
+    return this.store.get('districts', []);
   }
 
-  // Pending cases count by court
+  // Case statistics
   getCaseStats() {
-    return this.db.prepare(`
-      SELECT
-        court_name,
-        COUNT(*) as total_cases,
-        SUM(CASE WHEN case_status = 'pending' THEN 1 ELSE 0 END) as pending,
-        SUM(CASE WHEN case_status = 'disposed' THEN 1 ELSE 0 END) as disposed
-      FROM cases
-      GROUP BY court_name
-    `).all();
+    const cases = this.store.get('cases', []);
+    const stats = {};
+
+    cases.forEach(c => {
+      const court = c.court_name || 'Unknown';
+      if (!stats[court]) {
+        stats[court] = { total_cases: 0, pending: 0, disposed: 0 };
+      }
+      stats[court].total_cases++;
+      if (c.case_status === 'disposed') {
+        stats[court].disposed++;
+      } else {
+        stats[court].pending++;
+      }
+    });
+
+    return Object.entries(stats).map(([court_name, data]) => ({
+      court_name,
+      ...data
+    }));
   }
 
   // Update last fetched timestamp
   updateLastFetched(caseId) {
-    return this.db.prepare(`
-      UPDATE cases SET last_fetched = datetime('now') WHERE id = ?
-    `).run(caseId);
+    const caseData = this.getCase(caseId);
+    if (caseData) {
+      this.updateCase(caseId, { last_fetched: new Date().toISOString() });
+    }
   }
 
   close() {
-    if (this.db) {
-      this.db.close();
-      log.info('Database closed');
-    }
+    // No-op for electron-store (auto-saves)
+    log.info('Database session ended');
   }
 }
 
