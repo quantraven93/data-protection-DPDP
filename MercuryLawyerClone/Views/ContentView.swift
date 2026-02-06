@@ -30,7 +30,7 @@ struct ContentView: View {
         .sheet(isPresented: $appState.showExportSheet) {
             ExportSheet()
         }
-        .alert("Error", isPresented: .init(
+        .alert("Error", isPresented: Binding<Bool>(
             get: { appState.errorMessage != nil },
             set: { if !$0 { appState.errorMessage = nil } }
         )) {
