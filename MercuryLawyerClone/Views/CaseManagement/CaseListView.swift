@@ -75,9 +75,6 @@ struct CaseListView: View {
             }
             Button("Cancel", role: .cancel) {}
         }
-        .onChange(of: caseViewModel.sortOrder) { _, _ in
-            caseViewModel.sortCases()
-        }
     }
 
     private func deleteCases(at indexSet: IndexSet) {
