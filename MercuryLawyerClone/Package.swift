@@ -6,7 +6,7 @@ import PackageDescription
 let package = Package(
     name: "MercuryLawyerClone",
     platforms: [
-        .macOS(.v13)
+        .macOS(.v14)
     ],
     products: [
         .executable(name: "MercuryLawyerClone", targets: ["MercuryLawyerClone"])

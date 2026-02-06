@@ -267,7 +267,7 @@ actor WebScrapingService {
     }
 
     private func parseCNRResponse(_ data: Data) -> Case? {
-        guard let html = String(data: data, encoding: .utf8) else { return nil }
+        guard let _ = String(data: data, encoding: .utf8) else { return nil }
 
         // Parse CNR search results
         // This would need proper implementation
