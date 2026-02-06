@@ -929,3 +929,212 @@ textarea.dark-input {
     justify-content: center;
   }
 }
+
+/* ===== Embedded Browser Styles ===== */
+
+.modal-large {
+  max-width: 1100px;
+  width: 95%;
+  height: 85vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-large .modal-form {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 16px 24px 24px;
+}
+
+.modal-large .modal-form.active {
+  display: flex;
+}
+
+/* eCourts Toolbar */
+.ecourts-toolbar {
+  margin-bottom: 16px;
+}
+
+.court-quick-links {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.court-link-btn {
+  padding: 10px 20px;
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.court-link-btn:hover {
+  background-color: var(--accent-purple);
+  border-color: var(--accent-purple);
+  color: white;
+}
+
+.court-link-btn.active {
+  background-color: var(--accent-purple);
+  border-color: var(--accent-purple);
+  color: white;
+}
+
+.browser-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: var(--bg-input);
+  border-radius: var(--radius-md);
+  padding: 8px 12px;
+}
+
+.browser-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.browser-btn:hover {
+  background-color: var(--bg-card-hover);
+  color: var(--text-primary);
+}
+
+.browser-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.browser-url-input {
+  flex: 1;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 13px;
+  padding: 8px 12px;
+  outline: none;
+}
+
+/* eCourts Browser Container */
+.ecourts-browser-container {
+  flex: 1;
+  position: relative;
+  background-color: var(--bg-dark);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.ecourts-browser-container webview {
+  width: 100%;
+  height: 100%;
+  background: white;
+}
+
+.browser-placeholder {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg-card);
+}
+
+.browser-placeholder.hidden {
+  display: none;
+}
+
+.placeholder-content {
+  text-align: center;
+  padding: 40px;
+}
+
+.placeholder-content .placeholder-icon {
+  font-size: 72px;
+  margin-bottom: 20px;
+  opacity: 0.5;
+}
+
+.placeholder-content h3 {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+}
+
+.placeholder-content p {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+/* eCourts Actions */
+.ecourts-actions {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.ecourts-actions .submit-btn {
+  width: auto;
+  padding: 14px 48px;
+  font-size: 15px;
+}
+
+.ecourts-actions .submit-btn:disabled {
+  background-color: var(--border-color);
+  cursor: not-allowed;
+}
+
+.ecourts-actions .help-text {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* Manual entry form in large modal */
+.modal-large #custom-case-form {
+  overflow-y: auto;
+}
+
+/* Webview loading state */
+.webview-loading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.webview-loading .spinner {
+  width: 36px;
+  height: 36px;
+}
+
+.webview-loading p {
+  color: var(--text-secondary);
+  font-size: 13px;
+}

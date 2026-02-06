@@ -30,6 +30,7 @@ function createWindow() {
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
+      webviewTag: true, // Enable webview tag for embedded browser
       preload: path.join(__dirname, 'preload.js')
     },
     icon: path.join(__dirname, '../../assets/icon.png'),
