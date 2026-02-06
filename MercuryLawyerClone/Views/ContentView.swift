@@ -11,6 +11,7 @@ struct ContentView: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var caseViewModel: CaseViewModel
     @EnvironmentObject var notificationManager: NotificationManager
+    @State private var showErrorAlert = false
 
     var body: some View {
         NavigationSplitView {
@@ -30,13 +31,15 @@ struct ContentView: View {
         .sheet(isPresented: $appState.showExportSheet) {
             ExportSheet()
         }
-        .alert("Error", isPresented: Binding<Bool>(
-            get: { appState.errorMessage != nil },
-            set: { if !$0 { appState.errorMessage = nil } }
-        )) {
-            Button("OK") { appState.errorMessage = nil }
+        .alert("Error", isPresented: $showErrorAlert) {
+            Button("OK") {
+                appState.errorMessage = nil
+            }
         } message: {
-            Text(appState.errorMessage ?? "")
+            Text(appState.errorMessage ?? "An error occurred")
+        }
+        .onChange(of: appState.errorMessage) { _, newValue in
+            showErrorAlert = newValue != nil
         }
         .preferredColorScheme(.dark)
     }
