@@ -134,7 +134,7 @@ enum CaseType: String, Codable, CaseIterable {
     case fa = "FA"           // First Appeal
 
     // Criminal
-    case cc = "CC"           // Criminal Case
+    case criminalCase = "CrC"  // Criminal Case
     case sc = "SC"           // Sessions Case
     case crl = "Crl"         // Criminal
     case bail = "BA"         // Bail Application
@@ -160,7 +160,7 @@ enum CaseType: String, Codable, CaseIterable {
         case .crp: return "Civil Revision Petition"
         case .sa: return "Second Appeal"
         case .fa: return "First Appeal"
-        case .cc: return "Criminal Case"
+        case .criminalCase: return "Criminal Case"
         case .sc: return "Sessions Case"
         case .crl: return "Criminal"
         case .bail: return "Bail Application"

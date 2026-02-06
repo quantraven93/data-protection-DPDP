@@ -17,14 +17,13 @@ let package = Package(
             name: "MercuryLawyerClone",
             dependencies: [],
             path: ".",
-            exclude: ["README.md", "LICENSE"],
+            exclude: ["README.md"],
             sources: [
                 "MercuryLawyerCloneApp.swift",
                 "Models",
                 "Views",
                 "ViewModels",
-                "Services",
-                "Utils"
+                "Services"
             ]
         )
     ]

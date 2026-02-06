@@ -33,13 +33,13 @@ actor DataService {
     }
 
     // MARK: - Directory Management
-    private func getDocumentsDirectory() -> URL {
+    private nonisolated func getDocumentsDirectory() -> URL {
         let paths = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask)
         let appSupport = paths[0].appendingPathComponent("MercuryLawyerClone")
         return appSupport
     }
 
-    private func createDirectoryIfNeeded() {
+    private nonisolated func createDirectoryIfNeeded() {
         let directory = getDocumentsDirectory()
         if !fileManager.fileExists(atPath: directory.path) {
             try? fileManager.createDirectory(at: directory, withIntermediateDirectories: true)
