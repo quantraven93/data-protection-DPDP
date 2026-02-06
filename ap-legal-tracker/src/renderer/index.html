@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; frame-src https://services.ecourts.gov.in https://hcservices.ecourts.gov.in https://sci.gov.in *;">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'">
   <title>AP Legal Tracker</title>
   <link rel="stylesheet" href="styles.css">
 </head>
@@ -97,9 +97,9 @@
     </main>
   </div>
 
-  <!-- Add/Search Case Modal -->
+  <!-- Add/Search Case Modal - Mercury Lawyer Style -->
   <div id="case-modal" class="modal">
-    <div class="modal-content modal-dark modal-large">
+    <div class="modal-content modal-dark">
       <div class="modal-header">
         <h2 id="modal-title">ADD A NEW CASE</h2>
         <button class="modal-close" id="close-modal">&times;</button>
@@ -107,55 +107,119 @@
 
       <!-- Tabs -->
       <div class="modal-tabs">
-        <button class="modal-tab active" data-tab="ecourts-browser">Search eCourts</button>
-        <button class="modal-tab" data-tab="custom">Manual Entry</button>
+        <button class="modal-tab active" data-tab="case-number">By Case Number</button>
+        <button class="modal-tab" data-tab="party-name">By Party Name</button>
+        <button class="modal-tab" data-tab="advocate">By Advocate</button>
+        <button class="modal-tab" data-tab="custom">Custom Case</button>
       </div>
 
-      <!-- eCourts Browser Tab - Embedded Browser -->
-      <div id="ecourts-browser-tab" class="modal-form active">
-        <div class="ecourts-toolbar">
-          <div class="court-quick-links">
-            <button class="court-link-btn" data-url="https://hcservices.ecourts.gov.in/hcservices/main.php">
-              AP High Court
-            </button>
-            <button class="court-link-btn" data-url="https://services.ecourts.gov.in/ecourtindia_v6/">
-              District Courts
-            </button>
-            <button class="court-link-btn" data-url="https://main.sci.gov.in/case-status">
-              Supreme Court
-            </button>
-          </div>
-          <div class="browser-controls">
-            <button id="browser-back" class="browser-btn" title="Back">←</button>
-            <button id="browser-forward" class="browser-btn" title="Forward">→</button>
-            <button id="browser-refresh" class="browser-btn" title="Refresh">↻</button>
-            <input type="text" id="browser-url" class="browser-url-input" placeholder="Enter URL or select a court above" readonly>
-          </div>
+      <!-- By Case Number Form - Simple like Mercury Lawyer -->
+      <form id="case-number-form" class="modal-form active">
+        <div class="form-group">
+          <label>Hearing Court</label>
+          <select id="hearing-court" class="dark-select" required>
+            <option value="">Select Court</option>
+            <option value="High Court of Andhra Pradesh">High Court of Andhra Pradesh</option>
+            <option value="Supreme Court of India">Supreme Court of India</option>
+            <optgroup label="District Courts">
+              <option value="District Court - Guntur">District Court - Guntur</option>
+              <option value="District Court - Vijayawada">District Court - Vijayawada</option>
+              <option value="District Court - Visakhapatnam">District Court - Visakhapatnam</option>
+              <option value="District Court - Tirupati">District Court - Tirupati</option>
+              <option value="District Court - Kurnool">District Court - Kurnool</option>
+              <option value="District Court - Anantapur">District Court - Anantapur</option>
+              <option value="District Court - Nellore">District Court - Nellore</option>
+              <option value="District Court - Kadapa">District Court - Kadapa</option>
+              <option value="District Court - Rajahmundry">District Court - Rajahmundry</option>
+              <option value="District Court - Kakinada">District Court - Kakinada</option>
+              <option value="District Court - Eluru">District Court - Eluru</option>
+              <option value="District Court - Ongole">District Court - Ongole</option>
+              <option value="District Court - Srikakulam">District Court - Srikakulam</option>
+            </optgroup>
+          </select>
         </div>
 
-        <div class="ecourts-browser-container">
-          <webview id="ecourts-webview"
-            src="about:blank"
-            style="width: 100%; height: 100%;"
-            allowpopups>
-          </webview>
-          <div id="browser-placeholder" class="browser-placeholder">
-            <div class="placeholder-content">
-              <span class="placeholder-icon">🔍</span>
-              <h3>Search eCourts Directly</h3>
-              <p>Click on a court above to open the official eCourts portal.</p>
-              <p>Search for your case, then click "Save This Case" to add it.</p>
-            </div>
-          </div>
+        <div class="form-group">
+          <label>Case Type</label>
+          <select id="hearing-case-type" class="dark-select" required>
+            <option value="">Select Case Type</option>
+            <optgroup label="High Court">
+              <option value="WP">Writ Petition (WP)</option>
+              <option value="WPMP">WP Misc Petition (WPMP)</option>
+              <option value="CRP">Civil Revision Petition (CRP)</option>
+              <option value="CMA">Civil Misc Appeal (CMA)</option>
+              <option value="SA">Second Appeal (SA)</option>
+              <option value="AS">Appeal Suit (AS)</option>
+              <option value="CRLP">Criminal Petition (CRLP)</option>
+              <option value="CRLA">Criminal Appeal (CRLA)</option>
+            </optgroup>
+            <optgroup label="District Court">
+              <option value="OS">Original Suit (OS)</option>
+              <option value="EP">Execution Petition (EP)</option>
+              <option value="IA">Interlocutory Application (IA)</option>
+              <option value="CC">Civil Case (CC)</option>
+              <option value="MC">Misc Case (MC)</option>
+              <option value="SC">Sessions Case (SC)</option>
+            </optgroup>
+            <optgroup label="Supreme Court">
+              <option value="SLP(C)">Special Leave Petition Civil</option>
+              <option value="SLP(CRL)">Special Leave Petition Criminal</option>
+              <option value="CA">Civil Appeal</option>
+              <option value="WP(C)">Writ Petition Civil</option>
+            </optgroup>
+          </select>
         </div>
 
-        <div class="ecourts-actions">
-          <button id="save-case-btn" class="submit-btn" disabled>
-            Save This Case
-          </button>
-          <p class="help-text">Browse eCourts, find your case, then click Save to add it to your tracker.</p>
+        <div class="form-group">
+          <label>Case Number</label>
+          <input type="text" id="hearing-case-number" class="dark-input" placeholder="Enter Case Number" required>
         </div>
-      </div>
+
+        <div class="form-group">
+          <label>Case Year</label>
+          <select id="hearing-case-year" class="dark-select" required>
+          </select>
+        </div>
+
+        <button type="submit" class="submit-btn">SUBMIT</button>
+
+        <p class="modal-help">
+          Can't find your Court? <a href="#">Request it now</a>
+        </p>
+      </form>
+
+      <!-- By Party Name Form -->
+      <form id="party-name-form" class="modal-form">
+        <div class="form-group">
+          <label>Court</label>
+          <select id="party-court" class="dark-select" required>
+            <option value="">Select Court</option>
+            <option value="High Court of Andhra Pradesh">High Court of Andhra Pradesh</option>
+            <option value="Supreme Court of India">Supreme Court of India</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Party Name</label>
+          <input type="text" id="party-name-input" class="dark-input" placeholder="Enter Party Name" required>
+        </div>
+        <button type="submit" class="submit-btn">SEARCH</button>
+      </form>
+
+      <!-- By Advocate Form -->
+      <form id="advocate-form" class="modal-form">
+        <div class="form-group">
+          <label>Court</label>
+          <select id="adv-court" class="dark-select" required>
+            <option value="">Select Court</option>
+            <option value="High Court of Andhra Pradesh">High Court of Andhra Pradesh</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Advocate Name</label>
+          <input type="text" id="adv-name" class="dark-input" placeholder="Enter Advocate Name" required>
+        </div>
+        <button type="submit" class="submit-btn">SEARCH</button>
+      </form>
 
       <!-- Custom Case Form (Manual Entry) -->
       <form id="custom-case-form" class="modal-form">
@@ -171,21 +235,12 @@
                 <option value="District Court - Vijayawada">District Court - Vijayawada</option>
                 <option value="District Court - Visakhapatnam">District Court - Visakhapatnam</option>
                 <option value="District Court - Tirupati">District Court - Tirupati</option>
-                <option value="District Court - Kurnool">District Court - Kurnool</option>
-                <option value="District Court - Anantapur">District Court - Anantapur</option>
-                <option value="District Court - Nellore">District Court - Nellore</option>
-                <option value="District Court - Kadapa">District Court - Kadapa</option>
-                <option value="District Court - Rajahmundry">District Court - Rajahmundry</option>
-                <option value="District Court - Kakinada">District Court - Kakinada</option>
-                <option value="District Court - Eluru">District Court - Eluru</option>
-                <option value="District Court - Ongole">District Court - Ongole</option>
-                <option value="District Court - Srikakulam">District Court - Srikakulam</option>
               </optgroup>
             </select>
           </div>
           <div class="form-group">
             <label>Case Number</label>
-            <input type="text" id="case-number" class="dark-input" placeholder="e.g., WP 12345/2024" required>
+            <input type="text" id="case-number" class="dark-input" placeholder="e.g., 12345" required>
           </div>
         </div>
 
@@ -195,16 +250,10 @@
             <select id="case-type" class="dark-select">
               <option value="">Select Type</option>
               <option value="WP">Writ Petition (WP)</option>
-              <option value="WPMP">WP Miscellaneous Petition</option>
               <option value="CRP">Civil Revision Petition (CRP)</option>
-              <option value="CMA">Civil Miscellaneous Appeal (CMA)</option>
-              <option value="SA">Second Appeal (SA)</option>
               <option value="OS">Original Suit (OS)</option>
               <option value="AS">Appeal Suit (AS)</option>
               <option value="EP">Execution Petition (EP)</option>
-              <option value="IA">Interlocutory Application (IA)</option>
-              <option value="CC">Civil Case</option>
-              <option value="MC">Misc. Case</option>
             </select>
           </div>
           <div class="form-group">
@@ -214,61 +263,24 @@
         </div>
 
         <div class="form-group">
-          <label>Petitioner / Plaintiff</label>
+          <label>Petitioner</label>
           <input type="text" id="petitioner" class="dark-input" placeholder="Petitioner name(s)" required>
         </div>
 
         <div class="form-group">
-          <label>Respondent / Defendant</label>
+          <label>Respondent</label>
           <input type="text" id="respondent" class="dark-input" placeholder="Respondent name(s)" required>
         </div>
 
         <div class="form-row">
           <div class="form-group">
-            <label>Advocate (Petitioner)</label>
-            <input type="text" id="advocate-petitioner" class="dark-input" placeholder="Advocate name">
-          </div>
-          <div class="form-group">
-            <label>Advocate (Respondent)</label>
-            <input type="text" id="advocate-respondent" class="dark-input" placeholder="Advocate name">
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label>Next Hearing Date</label>
+            <label>Next Hearing</label>
             <input type="date" id="next-hearing" class="dark-input">
           </div>
           <div class="form-group">
             <label>CNR Number</label>
             <input type="text" id="cnr-number" class="dark-input" placeholder="e.g., APGU000021322020">
           </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label>Status</label>
-            <select id="case-status" class="dark-select">
-              <option value="pending">Pending</option>
-              <option value="listed">Listed for Hearing</option>
-              <option value="reserved">Reserved for Orders</option>
-              <option value="disposed">Disposed</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Stage</label>
-            <input type="text" id="case-stage" class="dark-input" placeholder="e.g., Arguments, Evidence">
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label>Act / Section</label>
-          <input type="text" id="act-sections" class="dark-input" placeholder="e.g., CPC Section 96, Order 41">
-        </div>
-
-        <div class="form-group">
-          <label>Notes</label>
-          <textarea id="case-notes" class="dark-input" rows="2" placeholder="Additional notes..."></textarea>
         </div>
 
         <button type="submit" class="submit-btn">ADD CASE</button>
