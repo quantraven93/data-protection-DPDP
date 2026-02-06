@@ -31,15 +31,15 @@ struct ContentView: View {
         .sheet(isPresented: $appState.showExportSheet) {
             ExportSheet()
         }
+        .onChange(of: appState.errorMessage) { oldValue, newValue in
+            showErrorAlert = (newValue != nil)
+        }
         .alert("Error", isPresented: $showErrorAlert) {
             Button("OK") {
                 appState.errorMessage = nil
             }
         } message: {
             Text(appState.errorMessage ?? "An error occurred")
-        }
-        .onChange(of: appState.errorMessage) { _, newValue in
-            showErrorAlert = newValue != nil
         }
         .preferredColorScheme(.dark)
     }
