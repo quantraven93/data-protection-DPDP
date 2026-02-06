@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'">
   <title>AP Legal Tracker</title>
   <link rel="stylesheet" href="styles.css">
 </head>
@@ -19,511 +19,224 @@
       </div>
 
       <nav class="sidebar-nav">
-        <a href="#" class="nav-item active" data-view="dashboard">
-          <span class="nav-icon">📊</span>
-          <span>Dashboard</span>
+        <a href="#" class="nav-item active" data-view="workspace">
+          <span class="nav-icon">📋</span>
+          <span>Workspace</span>
         </a>
-        <a href="#" class="nav-item" data-view="cases">
-          <span class="nav-icon">📁</span>
-          <span>All Cases</span>
-        </a>
-        <a href="#" class="nav-item" data-view="hearings">
+        <a href="#" class="nav-item" data-view="calendar">
           <span class="nav-icon">📅</span>
-          <span>Hearings</span>
+          <span>Calendar</span>
         </a>
-        <a href="#" class="nav-item" data-view="orders">
-          <span class="nav-icon">📜</span>
-          <span>Orders</span>
+        <a href="#" class="nav-item" data-view="display-board">
+          <span class="nav-icon">📊</span>
+          <span>Display Board</span>
         </a>
-
-        <div class="nav-divider"></div>
-
-        <div class="nav-section-title">Courts</div>
-        <a href="#" class="nav-item" data-filter="supreme-court">
-          <span class="nav-icon">🏛️</span>
-          <span>Supreme Court</span>
+        <a href="#" class="nav-item" data-view="reports">
+          <span class="nav-icon">📈</span>
+          <span>Reports</span>
         </a>
-        <a href="#" class="nav-item" data-filter="high-court">
-          <span class="nav-icon">🏛️</span>
-          <span>High Court AP</span>
-        </a>
-        <a href="#" class="nav-item" data-filter="district-courts">
-          <span class="nav-icon">🏛️</span>
-          <span>District Courts</span>
-        </a>
-      </nav>
-
-      <div class="sidebar-footer">
         <a href="#" class="nav-item" data-view="settings">
           <span class="nav-icon">⚙️</span>
           <span>Settings</span>
         </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-info">
+          <span class="user-icon">👤</span>
+          <span class="user-name">Ravi Teja Kukkala</span>
+        </div>
       </div>
     </aside>
 
     <!-- Main Content -->
-    <main class="main-content">
-      <!-- Header -->
-      <header class="main-header">
-        <div class="header-left">
-          <h1 id="page-title">Dashboard</h1>
+    <main class="main-content dark-theme">
+      <!-- Top Header -->
+      <header class="top-header">
+        <div class="search-container">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="search-input" placeholder="Search Cases" class="search-input">
+          <button class="filter-btn" title="Filter">
+            <span>⚙️</span>
+          </button>
         </div>
-        <div class="header-right">
-          <div class="search-box">
-            <input type="text" id="search-input" placeholder="Search cases...">
-          </div>
-          <button class="btn btn-primary" id="search-ecourts-btn" title="Search & Import from eCourts">
-            🔍 Search eCourts
-          </button>
-          <button class="btn btn-secondary" id="add-case-btn">
-            + Manual Add
-          </button>
-          <button class="btn btn-secondary" id="refresh-btn" title="Refresh all cases">
-            🔄
-          </button>
+        <div class="header-actions">
+          <button class="btn-icon" title="Notifications">🔔</button>
+          <button class="btn-icon" id="refresh-btn" title="Refresh">🔄</button>
         </div>
       </header>
 
-      <!-- Content Area -->
-      <div class="content-area">
-        <!-- Dashboard View -->
-        <div id="dashboard-view" class="view active">
-          <div class="stats-grid">
-            <div class="stat-card">
-              <div class="stat-value" id="total-cases">0</div>
-              <div class="stat-label">Total Cases</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-value" id="pending-cases">0</div>
-              <div class="stat-label">Pending</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-value" id="upcoming-hearings">0</div>
-              <div class="stat-label">Upcoming Hearings</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-value" id="recent-orders">0</div>
-              <div class="stat-label">Recent Orders</div>
-            </div>
+      <!-- Content Split View -->
+      <div class="content-split">
+        <!-- Cases List -->
+        <div class="cases-list-panel">
+          <div class="panel-header">
+            <h2>My Cases</h2>
+            <button class="add-btn" id="add-case-btn" title="Add New Case">
+              <span>+</span>
+            </button>
           </div>
 
-          <div class="dashboard-grid">
-            <div class="card">
-              <div class="card-header">
-                <h3>Upcoming Hearings</h3>
-                <a href="#" data-view="hearings">View All →</a>
-              </div>
-              <div class="card-body">
-                <div id="upcoming-hearings-list" class="list">
-                  <div class="empty-state">No upcoming hearings</div>
-                </div>
-              </div>
-            </div>
-
-            <div class="card">
-              <div class="card-header">
-                <h3>Recent Orders</h3>
-                <a href="#" data-view="orders">View All →</a>
-              </div>
-              <div class="card-body">
-                <div id="recent-orders-list" class="list">
-                  <div class="empty-state">No recent orders</div>
-                </div>
-              </div>
-            </div>
-
-            <div class="card full-width">
-              <div class="card-header">
-                <h3>Cases by Court</h3>
-              </div>
-              <div class="card-body">
-                <div id="cases-by-court" class="court-stats">
-                  <div class="empty-state">No cases added yet</div>
-                </div>
-              </div>
+          <div id="cases-list" class="cases-list">
+            <!-- Cases will be rendered here -->
+            <div class="empty-state">
+              <p>No cases yet</p>
+              <button class="btn btn-primary" id="first-case-btn">+ Add Your First Case</button>
             </div>
           </div>
         </div>
 
-        <!-- Cases View -->
-        <div id="cases-view" class="view">
-          <div class="cases-toolbar">
-            <div class="filter-group">
-              <select id="court-filter">
-                <option value="">All Courts</option>
-                <option value="Supreme Court">Supreme Court</option>
-                <option value="High Court">High Court AP</option>
-                <option value="District">District Courts</option>
-              </select>
-              <select id="status-filter">
-                <option value="">All Status</option>
-                <option value="pending">Pending</option>
-                <option value="disposed">Disposed</option>
-              </select>
-              <select id="priority-filter">
-                <option value="">All Priority</option>
-                <option value="high">High</option>
-                <option value="normal">Normal</option>
-                <option value="low">Low</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="cases-table-container">
-            <table class="cases-table">
-              <thead>
-                <tr>
-                  <th>Case Number</th>
-                  <th>Court</th>
-                  <th>Petitioner vs Respondent</th>
-                  <th>Status</th>
-                  <th>Next Hearing</th>
-                  <th>Priority</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody id="cases-table-body">
-                <tr>
-                  <td colspan="7" class="empty-state">No cases found. Click "Add Case" to add your first case.</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- Hearings View -->
-        <div id="hearings-view" class="view">
-          <div class="calendar-header">
-            <button class="btn btn-secondary" id="prev-month">←</button>
-            <h3 id="calendar-month">January 2024</h3>
-            <button class="btn btn-secondary" id="next-month">→</button>
-          </div>
-          <div id="hearings-list" class="hearings-list">
-            <div class="empty-state">No hearings scheduled</div>
-          </div>
-        </div>
-
-        <!-- Orders View -->
-        <div id="orders-view" class="view">
-          <div id="orders-list" class="orders-list">
-            <div class="empty-state">No orders found</div>
-          </div>
-        </div>
-
-        <!-- Settings View -->
-        <div id="settings-view" class="view">
-          <div class="settings-section">
-            <h3>General Settings</h3>
-            <div class="setting-item">
-              <label>
-                <input type="checkbox" id="auto-refresh" checked>
-                Enable automatic case refresh
-              </label>
-            </div>
-            <div class="setting-item">
-              <label>
-                <input type="checkbox" id="desktop-notifications" checked>
-                Enable desktop notifications
-              </label>
-            </div>
-            <div class="setting-item">
-              <label>Refresh interval (hours)</label>
-              <input type="number" id="refresh-interval" value="24" min="1" max="168">
-            </div>
-          </div>
-
-          <div class="settings-section">
-            <h3>eCourts Portal Links</h3>
-            <div class="portal-links">
-              <a href="https://hcservices.ecourts.gov.in/ecourtindiaHC/index_highcourt.php?state_cd=2&dist_cd=1&stateNm=Andhra+Pradesh" target="_blank" class="portal-link">
-                High Court of AP eCourts →
-              </a>
-              <a href="https://services.ecourts.gov.in/" target="_blank" class="portal-link">
-                District Courts eCourts →
-              </a>
-              <a href="https://www.sci.gov.in/case-status-case-no/" target="_blank" class="portal-link">
-                Supreme Court Case Status →
-              </a>
-            </div>
-          </div>
-
-          <div class="settings-section">
-            <h3>Data Management</h3>
-            <div class="button-group">
-              <button class="btn btn-secondary" id="export-data">Export All Data</button>
-              <button class="btn btn-secondary" id="import-data">Import Data</button>
-              <button class="btn btn-danger" id="clear-data">Clear All Data</button>
-            </div>
-          </div>
-
-          <div class="settings-section">
-            <h3>About</h3>
-            <p>AP Legal Tracker v1.0.0</p>
-            <p>A desktop application for tracking case status across Andhra Pradesh courts.</p>
-            <p class="text-muted">Data sourced from official eCourts portals.</p>
+        <!-- Case Detail Panel -->
+        <div class="case-detail-panel" id="case-detail-panel">
+          <div class="detail-placeholder">
+            <span class="placeholder-icon">📁</span>
+            <p>Select a case to view details</p>
           </div>
         </div>
       </div>
     </main>
   </div>
 
-  <!-- Add/Edit Case Modal -->
+  <!-- Add/Search Case Modal -->
   <div id="case-modal" class="modal">
-    <div class="modal-content">
+    <div class="modal-content modal-dark">
       <div class="modal-header">
-        <h2 id="modal-title">Add New Case</h2>
+        <h2 id="modal-title">ADD A NEW CASE</h2>
         <button class="modal-close" id="close-modal">&times;</button>
       </div>
-      <form id="case-form">
-        <div class="form-grid">
+
+      <!-- Tabs -->
+      <div class="modal-tabs">
+        <button class="modal-tab active" data-tab="case-number">By Case Number</button>
+        <button class="modal-tab" data-tab="party-name">By Party Name</button>
+        <button class="modal-tab" data-tab="advocate">By Advocate</button>
+        <button class="modal-tab" data-tab="custom">Custom Case</button>
+      </div>
+
+      <!-- By Case Number Form -->
+      <form id="search-case-form" class="modal-form active">
+        <div class="form-group">
+          <label>Hearing Court</label>
+          <select id="search-court" class="dark-select" required>
+            <option value="">Select Court</option>
+            <option value="High Court of Andhra Pradesh">High Court of Andhra Pradesh</option>
+            <option value="Supreme Court of India">Supreme Court of India</option>
+            <optgroup label="District Courts" id="district-court-options">
+            </optgroup>
+          </select>
+        </div>
+
+        <div class="form-group" id="district-group" style="display: none;">
+          <label>District</label>
+          <select id="search-district" class="dark-select">
+            <option value="">Select District</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Case Type</label>
+          <select id="search-case-type" class="dark-select" required>
+            <option value="">Select Case Type</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Case Number</label>
+          <input type="text" id="search-case-number" class="dark-input" placeholder="Enter Case Number" required>
+        </div>
+
+        <div class="form-group">
+          <label>Case Year</label>
+          <select id="search-case-year" class="dark-select" required>
+            <option value="">Select Year</option>
+          </select>
+        </div>
+
+        <button type="submit" class="submit-btn">SUBMIT</button>
+
+        <p class="modal-help">
+          Can't find your Court? <a href="#">Request it now</a>
+        </p>
+      </form>
+
+      <!-- Custom Case Form (Manual Entry) -->
+      <form id="custom-case-form" class="modal-form">
+        <div class="form-row">
           <div class="form-group">
-            <label for="case-court">Court *</label>
-            <select id="case-court" required>
+            <label>Court</label>
+            <select id="case-court" class="dark-select" required>
               <option value="">Select Court</option>
-              <option value="Supreme Court of India">Supreme Court of India</option>
               <option value="High Court of Andhra Pradesh">High Court of Andhra Pradesh</option>
-              <optgroup label="District Courts">
-                <option value="District Court Vijayawada">District Court Vijayawada</option>
-                <option value="District Court Guntur">District Court Guntur</option>
-                <option value="District Court Visakhapatnam">District Court Visakhapatnam</option>
-                <option value="District Court Tirupati">District Court Tirupati</option>
-                <option value="District Court Nellore">District Court Nellore</option>
-                <option value="District Court Kurnool">District Court Kurnool</option>
-                <option value="District Court Anantapur">District Court Anantapur</option>
-                <option value="District Court Kadapa">District Court Kadapa</option>
-                <option value="District Court Rajahmundry">District Court Rajahmundry</option>
-                <option value="District Court Kakinada">District Court Kakinada</option>
-                <option value="District Court Eluru">District Court Eluru</option>
-                <option value="District Court Ongole">District Court Ongole</option>
-                <option value="District Court Srikakulam">District Court Srikakulam</option>
-                <option value="District Court Vizianagaram">District Court Vizianagaram</option>
-              </optgroup>
+              <option value="Supreme Court of India">Supreme Court of India</option>
             </select>
           </div>
-
           <div class="form-group">
-            <label for="case-number">Case Number *</label>
-            <input type="text" id="case-number" placeholder="e.g., WP No. 12345/2024" required>
+            <label>Case Number</label>
+            <input type="text" id="case-number" class="dark-input" placeholder="e.g., WP 12345/2024" required>
           </div>
+        </div>
 
+        <div class="form-row">
           <div class="form-group">
-            <label for="case-type">Case Type</label>
-            <select id="case-type">
+            <label>Case Type</label>
+            <select id="case-type" class="dark-select">
               <option value="">Select Type</option>
               <option value="WP">Writ Petition (WP)</option>
               <option value="CRP">Civil Revision Petition (CRP)</option>
-              <option value="CMA">Civil Miscellaneous Appeal (CMA)</option>
-              <option value="AS">Appeal Suit (AS)</option>
               <option value="OS">Original Suit (OS)</option>
+              <option value="AS">Appeal Suit (AS)</option>
               <option value="EP">Execution Petition (EP)</option>
-              <option value="CMP">Civil Miscellaneous Petition (CMP)</option>
-              <option value="SLP">Special Leave Petition (SLP)</option>
-              <option value="CRIMINAL">Criminal Case</option>
-              <option value="OTHER">Other</option>
             </select>
           </div>
-
           <div class="form-group">
-            <label for="case-year">Year</label>
-            <input type="number" id="case-year" placeholder="2024" min="1950" max="2030">
-          </div>
-
-          <div class="form-group">
-            <label for="cnr-number">CNR Number</label>
-            <input type="text" id="cnr-number" placeholder="e.g., APHC01-001234-2024">
-          </div>
-
-          <div class="form-group">
-            <label for="case-district">District</label>
-            <select id="case-district">
-              <option value="">Select District</option>
-              <option value="Anantapur">Anantapur</option>
-              <option value="Chittoor">Chittoor</option>
-              <option value="East Godavari">East Godavari</option>
-              <option value="Guntur">Guntur</option>
-              <option value="Krishna">Krishna</option>
-              <option value="Kurnool">Kurnool</option>
-              <option value="Nellore">Nellore</option>
-              <option value="Prakasam">Prakasam</option>
-              <option value="Srikakulam">Srikakulam</option>
-              <option value="Visakhapatnam">Visakhapatnam</option>
-              <option value="Vizianagaram">Vizianagaram</option>
-              <option value="West Godavari">West Godavari</option>
-              <option value="YSR Kadapa">YSR Kadapa</option>
-            </select>
-          </div>
-
-          <div class="form-group full-width">
-            <label for="petitioner">Petitioner *</label>
-            <input type="text" id="petitioner" placeholder="Petitioner name(s)" required>
-          </div>
-
-          <div class="form-group full-width">
-            <label for="respondent">Respondent *</label>
-            <input type="text" id="respondent" placeholder="Respondent name(s)" required>
-          </div>
-
-          <div class="form-group">
-            <label for="advocate-petitioner">Advocate (Petitioner)</label>
-            <input type="text" id="advocate-petitioner" placeholder="Advocate name">
-          </div>
-
-          <div class="form-group">
-            <label for="advocate-respondent">Advocate (Respondent)</label>
-            <input type="text" id="advocate-respondent" placeholder="Advocate name">
-          </div>
-
-          <div class="form-group">
-            <label for="filing-date">Filing Date</label>
-            <input type="date" id="filing-date">
-          </div>
-
-          <div class="form-group">
-            <label for="next-hearing">Next Hearing Date</label>
-            <input type="date" id="next-hearing">
-          </div>
-
-          <div class="form-group">
-            <label for="case-status">Status</label>
-            <select id="case-status">
-              <option value="pending">Pending</option>
-              <option value="disposed">Disposed</option>
-              <option value="transferred">Transferred</option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label for="case-priority">Priority</label>
-            <select id="case-priority">
-              <option value="normal">Normal</option>
-              <option value="high">High</option>
-              <option value="low">Low</option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label for="judge-name">Judge Name</label>
-            <input type="text" id="judge-name" placeholder="Hon'ble Justice...">
-          </div>
-
-          <div class="form-group">
-            <label for="act-sections">Act/Sections</label>
-            <input type="text" id="act-sections" placeholder="e.g., CPC Section 151">
-          </div>
-
-          <div class="form-group full-width">
-            <label for="case-notes">Notes</label>
-            <textarea id="case-notes" rows="3" placeholder="Additional notes about the case..."></textarea>
+            <label>Year</label>
+            <input type="number" id="case-year" class="dark-input" placeholder="2024">
           </div>
         </div>
 
-        <div class="form-actions">
-          <button type="button" class="btn btn-secondary" id="cancel-case">Cancel</button>
-          <button type="submit" class="btn btn-primary">Save Case</button>
+        <div class="form-group">
+          <label>Petitioner</label>
+          <input type="text" id="petitioner" class="dark-input" placeholder="Petitioner name(s)" required>
         </div>
-      </form>
-    </div>
-  </div>
 
-  <!-- Case Details Modal -->
-  <div id="case-details-modal" class="modal">
-    <div class="modal-content modal-large">
-      <div class="modal-header">
-        <h2 id="case-details-title">Case Details</h2>
-        <button class="modal-close" id="close-details-modal">&times;</button>
-      </div>
-      <div class="modal-body" id="case-details-body">
-        <!-- Case details will be loaded here -->
-      </div>
-    </div>
-  </div>
+        <div class="form-group">
+          <label>Respondent</label>
+          <input type="text" id="respondent" class="dark-input" placeholder="Respondent name(s)" required>
+        </div>
 
-  <!-- Search eCourts Modal - Like Mercury Lawyer -->
-  <div id="search-modal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2>Search & Add Case from eCourts</h2>
-        <button class="modal-close" id="close-search-modal">&times;</button>
-      </div>
-      <div class="search-tabs">
-        <button class="search-tab active" data-tab="case-number">By Case Number</button>
-        <button class="search-tab" data-tab="cnr">By CNR Number</button>
-      </div>
-
-      <!-- Search by Case Number -->
-      <form id="search-case-form" class="search-form">
-        <div class="form-grid">
-          <div class="form-group full-width">
-            <label for="search-court">Hearing Court *</label>
-            <select id="search-court" required>
-              <option value="">Select Court</option>
-              <option value="High Court of Andhra Pradesh">High Court of Andhra Pradesh</option>
-              <option value="Supreme Court of India">Supreme Court of India</option>
-              <optgroup label="District Courts" id="district-court-options">
-                <!-- Districts will be loaded dynamically -->
-              </optgroup>
-            </select>
-          </div>
-
-          <div class="form-group" id="district-select-group" style="display: none;">
-            <label for="search-district">District *</label>
-            <select id="search-district">
-              <option value="">Select District</option>
-            </select>
-          </div>
-
+        <div class="form-row">
           <div class="form-group">
-            <label for="search-case-type">Case Type *</label>
-            <select id="search-case-type" required>
-              <option value="">Select Case Type</option>
-            </select>
+            <label>Advocate (Petitioner)</label>
+            <input type="text" id="advocate-petitioner" class="dark-input" placeholder="Advocate name">
           </div>
-
           <div class="form-group">
-            <label for="search-case-number">Case Number *</label>
-            <input type="text" id="search-case-number" placeholder="Enter Case Number" required>
+            <label>Advocate (Respondent)</label>
+            <input type="text" id="advocate-respondent" class="dark-input" placeholder="Advocate name">
           </div>
+        </div>
 
+        <div class="form-row">
           <div class="form-group">
-            <label for="search-case-year">Case Year *</label>
-            <select id="search-case-year" required>
-              <!-- Years will be populated dynamically -->
-            </select>
+            <label>Next Hearing Date</label>
+            <input type="date" id="next-hearing" class="dark-input">
+          </div>
+          <div class="form-group">
+            <label>CNR Number</label>
+            <input type="text" id="cnr-number" class="dark-input" placeholder="e.g., APGU000021322020">
           </div>
         </div>
 
-        <div class="search-info">
-          <p>A browser window will open for you to solve the CAPTCHA. Once you click "Search/Go", the case details will be automatically imported.</p>
+        <div class="form-group">
+          <label>Act / Section</label>
+          <input type="text" id="act-sections" class="dark-input" placeholder="e.g., CPC Section 96">
         </div>
 
-        <div class="form-actions">
-          <button type="button" class="btn btn-secondary" id="cancel-search">Cancel</button>
-          <button type="submit" class="btn btn-primary">
-            🔍 Search eCourts
-          </button>
-        </div>
-      </form>
-
-      <!-- Search by CNR -->
-      <form id="search-cnr-form" class="search-form" style="display: none;">
-        <div class="form-grid">
-          <div class="form-group full-width">
-            <label for="search-cnr-number">CNR Number *</label>
-            <input type="text" id="search-cnr-number" placeholder="e.g., APHC01-001234-2024" required>
-            <small class="form-help">CNR is a unique 16-digit Case Number Record identifier</small>
-          </div>
+        <div class="form-group">
+          <label>Notes</label>
+          <textarea id="case-notes" class="dark-input" rows="2" placeholder="Additional notes..."></textarea>
         </div>
 
-        <div class="search-info">
-          <p>A browser window will open for you to solve the CAPTCHA. Once you click "Search", the case details will be automatically imported.</p>
-        </div>
-
-        <div class="form-actions">
-          <button type="button" class="btn btn-secondary" id="cancel-cnr-search">Cancel</button>
-          <button type="submit" class="btn btn-primary">
-            🔍 Search by CNR
-          </button>
-        </div>
+        <button type="submit" class="submit-btn">ADD CASE</button>
       </form>
     </div>
   </div>
