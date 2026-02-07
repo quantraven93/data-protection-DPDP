@@ -43,7 +43,7 @@ struct SidebarView: View {
     var body: some View {
         List(selection: $appState.selectedSidebarItem) {
             Section {
-                ForEach([SidebarItem.dashboard, .allCases, .upcomingHearings]) { item in
+                ForEach([SidebarItem.dashboard, .caseList, .upcomingHearings]) { item in
                     NavigationLink(value: item) {
                         Label(item.rawValue, systemImage: item.icon)
                     }
@@ -61,7 +61,7 @@ struct SidebarView: View {
 
             Section("Courts") {
                 ForEach(Court.allCourts.prefix(5)) { court in
-                    NavigationLink(value: SidebarItem.allCases) {
+                    NavigationLink(value: SidebarItem.caseList) {
                         Label(court.name, systemImage: court.type.icon)
                             .lineLimit(1)
                     }
@@ -92,7 +92,7 @@ struct SidebarView: View {
 
     private func badgeCount(for item: SidebarItem) -> Int {
         switch item {
-        case .allCases:
+        case .caseList:
             return caseViewModel.cases.count
         case .upcomingHearings:
             return caseViewModel.upcomingHearings.count
@@ -112,7 +112,7 @@ struct MainContentView: View {
             switch appState.selectedSidebarItem {
             case .dashboard:
                 DashboardView()
-            case .allCases:
+            case .caseList:
                 CaseListView()
             case .upcomingHearings:
                 UpcomingHearingsView()

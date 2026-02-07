@@ -85,7 +85,7 @@ class AppState: ObservableObject {
 // MARK: - Sidebar Items
 enum SidebarItem: String, CaseIterable, Identifiable {
     case dashboard = "Dashboard"
-    case allCases = "All Cases"
+    case caseList = "All Cases"
     case upcomingHearings = "Upcoming Hearings"
     case calendar = "Calendar"
     case displayBoard = "Display Board"
@@ -97,7 +97,7 @@ enum SidebarItem: String, CaseIterable, Identifiable {
     var icon: String {
         switch self {
         case .dashboard: return "square.grid.2x2"
-        case .allCases: return "folder"
+        case .caseList: return "folder"
         case .upcomingHearings: return "clock"
         case .calendar: return "calendar"
         case .displayBoard: return "tv"
