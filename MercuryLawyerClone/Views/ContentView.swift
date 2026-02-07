@@ -76,8 +76,8 @@ struct SidebarView: View {
         }
         .listStyle(.sidebar)
         .frame(minWidth: 220)
-        .toolbar {
-            ToolbarItem {
+        .toolbar(id: "sidebar") {
+            ToolbarItem(id: "addCase", placement: .primaryAction) {
                 Button {
                     appState.showAddCaseSheet = true
                 } label: {
@@ -86,6 +86,7 @@ struct SidebarView: View {
                 .help("Add New Case")
             }
         }
+        .toolbarRole(.editor)
         .navigationTitle("Mercury Lawyer")
     }
 
