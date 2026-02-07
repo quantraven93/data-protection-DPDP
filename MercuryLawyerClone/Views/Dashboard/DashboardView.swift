@@ -211,7 +211,7 @@ struct DashboardView: View {
                             icon: "magnifyingglass",
                             color: .purple
                         ) {
-                            appState.selectedSidebarItem = .allCases
+                            appState.selectedSidebarItem = .caseList
                         }
                     }
                 }
