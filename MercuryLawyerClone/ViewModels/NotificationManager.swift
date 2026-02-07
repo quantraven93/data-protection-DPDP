@@ -19,12 +19,19 @@ class NotificationManager: ObservableObject {
 
     // MARK: - Private Properties
     private var cancellables = Set<AnyCancellable>()
-    private let notificationCenter = UNUserNotificationCenter.current()
+    private var notificationCenter: UNUserNotificationCenter?
+    private var canUseNotifications: Bool {
+        return Bundle.main.bundleIdentifier != nil
+    }
 
     // MARK: - Initialization
     init() {
         setupBindings()
-        requestAuthorization()
+        // Only initialize notification center if we have a proper bundle
+        if canUseNotifications {
+            notificationCenter = UNUserNotificationCenter.current()
+            requestAuthorization()
+        }
         loadNotifications()
     }
 
@@ -43,7 +50,8 @@ class NotificationManager: ObservableObject {
 
     // MARK: - Authorization
     func requestAuthorization() {
-        notificationCenter.requestAuthorization(options: [.alert, .sound, .badge]) { [weak self] granted, error in
+        guard let center = notificationCenter else { return }
+        center.requestAuthorization(options: [.alert, .sound, .badge]) { [weak self] granted, error in
             DispatchQueue.main.async {
                 self?.isAuthorized = granted
                 if let error = error {
@@ -80,13 +88,13 @@ class NotificationManager: ObservableObject {
 
     func deleteNotification(_ notification: AppNotification) {
         notifications.removeAll { $0.id == notification.id }
-        notificationCenter.removePendingNotificationRequests(withIdentifiers: [notification.id.uuidString])
+        notificationCenter?.removePendingNotificationRequests(withIdentifiers: [notification.id.uuidString])
     }
 
     func clearAllNotifications() {
         notifications.removeAll()
-        notificationCenter.removeAllPendingNotificationRequests()
-        notificationCenter.removeAllDeliveredNotifications()
+        notificationCenter?.removeAllPendingNotificationRequests()
+        notificationCenter?.removeAllDeliveredNotifications()
     }
 
     // MARK: - Scheduling
@@ -133,6 +141,8 @@ class NotificationManager: ObservableObject {
 
     // MARK: - Local Notifications
     private func scheduleLocalNotification(_ notification: AppNotification) {
+        guard let center = notificationCenter else { return }
+
         let content = UNMutableNotificationContent()
         content.title = notification.title
         content.body = notification.message
@@ -161,7 +171,7 @@ class NotificationManager: ObservableObject {
             trigger: trigger
         )
 
-        notificationCenter.add(request) { error in
+        center.add(request) { error in
             if let error = error {
                 print("Failed to schedule notification: \(error)")
             }
