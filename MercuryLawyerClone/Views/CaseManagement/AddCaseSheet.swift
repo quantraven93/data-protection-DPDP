@@ -205,6 +205,7 @@ struct CaseNumberForm: View {
     @Binding var caseNumber: String
     @Binding var caseYear: Int
     let years: [Int]
+    @FocusState private var isCaseNumberFocused: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -264,6 +265,12 @@ struct CaseNumberForm: View {
 
                 TextField("Enter case number", text: $caseNumber)
                     .textFieldStyle(.roundedBorder)
+                    .focused($isCaseNumberFocused)
+                    .onAppear {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                            isCaseNumberFocused = true
+                        }
+                    }
             }
 
             // Year
